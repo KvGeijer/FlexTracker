@@ -1,5 +1,8 @@
+use serde::{Serialize, Deserialize};
+
 use crate::time::{Time, Period, Date, now};
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct WorkLog {
     time: Time,
     period: Option<Period>,
@@ -14,14 +17,18 @@ impl WorkLog {
 
         WorkLog
         {
-            time: Time {hours: hours, minutes: minutes},
+            time: Time::new(hours, minutes),
             period: None,
             breaks: breaks.iter()   // I think I recall there being a better way to do this?
-                          .map(|&min| Time{hours: 0, minutes: min})
+                          .map(|&min| Time::new(0, min))
                           .collect(),
             date: date,
             description: Some(description),
         }
+    }
+
+    pub fn date<'a>(&'a self) -> &'a Date {
+        &self.date
     }
 }
 

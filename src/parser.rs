@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use crate::worklog::WorkLog;
+use crate::logger::WorkLog;
 
 pub enum CliResult {
     Log(WorkLog),

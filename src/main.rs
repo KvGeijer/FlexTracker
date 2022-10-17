@@ -1,8 +1,11 @@
 pub mod parser;
-mod worklog;
+mod logger;
 pub mod time;
 
 fn main() {
-    parser::parse();
-
+    match parser::parse() {
+        parser::CliResult::Log(worklog) => {
+            logger::Logger::log(worklog);
+        },
+    }
 }

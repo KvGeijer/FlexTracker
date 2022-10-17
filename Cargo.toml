@@ -11,3 +11,5 @@ about = "A small app to keep track of your working hours and flex time"
 clap = { version = "4.0", features = ["derive"] }
 regex = "1"
 chrono = "0.4"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1"
