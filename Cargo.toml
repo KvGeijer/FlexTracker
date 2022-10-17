@@ -9,3 +9,5 @@ about = "A small app to keep track of your working hours and flex time"
 
 [dependencies]
 clap = { version = "4.0", features = ["derive"] }
+regex = "1"
+chrono = "0.4"

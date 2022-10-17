@@ -1,4 +1,4 @@
-use crate::util::{Time, Period, Date};
+use crate::time::{Time, Period, Date, now};
 
 pub struct WorkLog {
     time: Time,
@@ -10,6 +10,8 @@ pub struct WorkLog {
 
 impl WorkLog {
     pub fn new(hours: usize, minutes: usize, description: String, breaks: Vec<usize>) -> WorkLog {
+        let (date, _time) = now();
+
         WorkLog
         {
             time: Time {hours: hours, minutes: minutes},
@@ -17,11 +19,7 @@ impl WorkLog {
             breaks: breaks.iter()   // I think I recall there being a better way to do this?
                           .map(|&min| Time{hours: 0, minutes: min})
                           .collect(),
-            date: Date {
-                day: 13,
-                month: 10,
-                year: 2022,
-            },
+            date: date,
             description: Some(description),
         }
     }

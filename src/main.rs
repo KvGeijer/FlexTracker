@@ -1,6 +1,6 @@
 pub mod parser;
 mod worklog;
-pub mod util;
+pub mod time;
 
 fn main() {
     parser::parse();
