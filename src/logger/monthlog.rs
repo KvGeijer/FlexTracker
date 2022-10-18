@@ -4,10 +4,12 @@ use std::fs;
 use super::WorkLog;
 use crate::time::{Time, Date};
 
+// TODO
 macro_rules! file_type {
     () => { "json" };
 }
 
+// TODO: configurable somewhere
 macro_rules! root_folder {
     () => { "/Users/kvongeij/dev/flex_cli/logs" }
 }
