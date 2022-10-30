@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
 use regex;
-use crate::logger::WorkLog;
+use crate::project_log::{WorkLog, PeriodLog, TimeLog};
 use lazy_static::lazy_static;
 
 
@@ -56,13 +56,14 @@ pub fn parse_log(log: CliLog) -> CliResult{
     let worklog =
         if log.time.is_some() {
             let (hours, minutes) = parse_time(&log.time.unwrap());
-            WorkLog::new_time(hours, minutes, log.description)
+            WorkLog::Time(TimeLog::new(hours, minutes, log.description))
         } else  {
             let ((from_hrs, from_min), (to_hrs, to_min)) = parse_period(&log.period.unwrap());
             let breaks = log.breaks.iter()
                 .map(|break_str| parse_time(break_str))
                 .collect();
-            WorkLog::new_period(from_hrs, from_min, to_hrs, to_min, breaks, log.description)
+            WorkLog::Period(
+                PeriodLog::new(from_hrs, from_min, to_hrs, to_min, breaks, log.description))
         };
 
     CliResult::Log(worklog)

@@ -1,6 +1,6 @@
 [package]
 name = "flex_cli"
-author= "Kåre von Geijer"
+author = "Kåre von Geijer"
 version = "0.1.0"
 edition = "2021"
 about = "A small app to keep track of your working hours and flex time"
