@@ -2,10 +2,11 @@ mod worklog;
 
 pub use self::worklog::{WorkLog, TimeLog, PeriodLog};
 
+use std::path::Path;
 use serde::{Serialize, Deserialize};
 use crate::time::Date;
 
-const ROOT_FOLDER: &str = "/Users/kvongeij/dev/flex_cli/logs";
+const ROOT_FOLDER: &str = "logs";   // TODO: Make it absolute when compiling maybe?
 const FILE_NAME: &str = "cisco";
 const FILE_TYPE: &str = "json";
 
@@ -25,6 +26,9 @@ impl ProjectLog {
             logs: vec![],
             start_date: date,
         };
+
+        assert!(!Path::new(&Self::get_path()).exists(), "Project already exists!");
+
         project.save();
     }
 
@@ -50,6 +54,9 @@ impl ProjectLog {
     // TODO: return result? For better error handling
     fn save(self) {
         assert_eq!(FILE_TYPE, "json");
+        std::fs::create_dir_all(ROOT_FOLDER)
+            .expect("Failed to create parent dirs to log");
+
         let path = Self::get_path();
         let serialized_str = serde_json::to_string(&self)
             .expect("Failed to serialize project log.");
