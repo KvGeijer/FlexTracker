@@ -34,6 +34,13 @@ impl WorkLog {
         }
     }
 
+    pub fn get_date(&self) -> Date {
+        match self {
+            WorkLog::Period(period_log) => period_log.date.clone(),
+            WorkLog::Duration(duration_log) => duration_log.date.clone(),
+        }
+    }
+
     pub fn new_period(period: Period, date: Date, desc: String, breaks: Vec<Duration>) -> WorkLog {
         WorkLog::Period(PeriodLog::new(period, date, desc, breaks))
     }

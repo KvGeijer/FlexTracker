@@ -47,6 +47,27 @@ impl ProjectLog {
         );
     }
 
+    pub fn delete(project_name: &str, date: Date) {
+        let mut project = Self::open(project_name);
+        project.logs = project.logs
+            .into_iter()
+            .filter(|log| log.get_date() != date)
+            .collect();
+        project.save();
+
+        println!("Removed all logs for project {} for the date {}", project_name, date);
+    }
+
+    pub fn wipe(project_name: &str) {
+        // Just nuke the whole directory
+        let path = Self::get_path(project_name);
+        assert!(path.as_path().exists(), "Project does not exist!");
+        std::fs::remove_file(path)
+            .expect("Unable to remove logs.");
+
+        println!("Removed all logs for project {}", project_name);
+    }
+
     fn open(project_name: &str) -> Self {
         let path = Self::get_path(project_name);
 

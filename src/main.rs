@@ -30,5 +30,7 @@ fn main() {
             project,
             start_date,
         } => ProjectLog::init(project, start_date),
+        CliResult::Delete { project, date } => ProjectLog::delete(&project, date),
+        CliResult::Wipe { project } => ProjectLog::wipe(&project),
     }
 }

@@ -23,12 +23,28 @@ pub enum CliResult {
         project: String,
         start_date: Date,
     },
+    Delete {
+        project: String,
+        date: Date,
+    },
+    Wipe {
+        project: String,
+    },
+}
+
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
+struct Cli {
+    #[command(subcommand)]
+    sub: SubCli,
 }
 
 #[derive(Subcommand)]
 enum SubCli {
     Log(CliLog),
-    Init(InitProject),
+    Init(CliInit),
+    Delete(CliDelete),
+    Wipe(CliWipe),
 }
 
 // TODO: Make one and only one of time and period be required. Use ArgGroup::multiple(true)
@@ -60,8 +76,9 @@ pub struct CliLog {
     breaks: Vec<String>,
 }
 
+/// Initialize a project for logging
 #[derive(Parser)]
-pub struct InitProject {
+pub struct CliInit {
     /// Project name
     name: String,
 
@@ -69,11 +86,21 @@ pub struct InitProject {
     date: Option<String>,
 }
 
+/// Delete all logs for a specific day
 #[derive(Parser)]
-#[command(author, version, about, long_about = None)]
-struct Cli {
-    #[command(subcommand)]
-    sub: SubCli,
+struct CliDelete {
+    /// Project name
+    name: String,
+
+    /// Date to delete all logs for
+    date: Option<String>,
+}
+
+/// Wipe all data about a project
+#[derive(Parser)]
+struct CliWipe {
+    /// Project name to completely wipe all logs from (BEWARE)
+    name: String,
 }
 
 pub fn parse() -> CliResult {
@@ -81,36 +108,9 @@ pub fn parse() -> CliResult {
     match cli.sub {
         SubCli::Log(log) => parse_log(log),
         SubCli::Init(init) => parse_init(init.name, init.date),
+        SubCli::Delete(delete) => parse_delete(delete.name, delete.date),
+        SubCli::Wipe(wipe) => CliResult::Wipe { project: wipe.name },
     }
-}
-
-fn parse_init(project: String, opt_date: Option<String>) -> CliResult {
-    let start_date = opt_date.map_or(now().0, parse_date);
-    CliResult::Init {
-        project,
-        start_date,
-    }
-}
-
-fn parse_date(date_str: String) -> Date {
-    lazy_static! {
-        static ref RE: regex::Regex = regex::Regex::new(r"(\d{4})?-(1?\d)?([123]\d)").unwrap();
-    }
-
-    let caps = RE
-        .captures(&date_str)
-        .expect("Submitted date does not match date regex!");
-
-    let (y, m, d) = now().0.into_ymd();
-
-    let year = parse_cap(caps.get(1), y);
-    let month = parse_cap(caps.get(2), m);
-    let day = parse_cap(caps.get(3), d); // TODO, better error handling?
-
-    // TODO: better check for valid date
-    assert!(day <= 31);
-
-    Date::new(year, month, day)
 }
 
 fn parse_log(log: CliLog) -> CliResult {
@@ -146,6 +146,41 @@ fn parse_log(log: CliLog) -> CliResult {
             }
         }
     }
+}
+
+fn parse_init(project: String, opt_date: Option<String>) -> CliResult {
+    CliResult::Init {
+        project,
+        start_date: opt_date.map_or(now().0, parse_date),
+    }
+}
+
+fn parse_delete(project: String, date: Option<String>) -> CliResult {
+    CliResult::Delete {
+        project,
+        date: date.map_or(now().0, parse_date),
+    }
+}
+
+fn parse_date(date_str: String) -> Date {
+    lazy_static! {
+        static ref RE: regex::Regex = regex::Regex::new(r"(\d{4})?-(1?\d)?([123]\d)").unwrap();
+    }
+
+    let caps = RE
+        .captures(&date_str)
+        .expect("Submitted date does not match date regex!");
+
+    let (y, m, d) = now().0.into_ymd();
+
+    let year = parse_cap(caps.get(1), y);
+    let month = parse_cap(caps.get(2), m);
+    let day = parse_cap(caps.get(3), d); // TODO, better error handling?
+
+    // TODO: better check for valid date
+    assert!(day <= 31);
+
+    Date::new(year, month, day)
 }
 
 // TODO: return option
