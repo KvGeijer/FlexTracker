@@ -1,17 +1,17 @@
 // Would probably be MUCH better, but less fun to use the chrono crate
 use chrono::{self, Datelike};
-use regex;
-use std::fmt::{Display, Formatter, Result};
-use std::ops::{Sub, Add};
-use std::iter::Sum;
-use std::cmp::{Eq, PartialEq, PartialOrd, Ord, Ordering};
-use serde::{Serialize, Deserialize};
 use lazy_static::lazy_static;
+use regex;
+use serde::{Deserialize, Serialize};
+use std::cmp::{Eq, Ord, Ordering, PartialEq, PartialOrd};
+use std::fmt::{Display, Formatter, Result};
+use std::iter::Sum;
+use std::ops::{Add, Sub};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Ord)]
 pub struct Time {
     hours: usize,
-    minutes: usize
+    minutes: usize,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Ord, Clone)]
@@ -22,7 +22,7 @@ pub struct Duration {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct Period {
     from: Time,
-    to: Time
+    to: Time,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -40,11 +40,7 @@ struct DateIterator {
 
 impl Date {
     pub fn new(year: usize, month: usize, day: usize) -> Date {
-        Self {
-            year,
-            month,
-            day,
-        }
+        Self { year, month, day }
     }
 
     pub fn into_ymd(&self) -> (usize, usize, usize) {
@@ -63,11 +59,7 @@ impl Date {
     }
 
     fn to_naive_chrono(&self) -> chrono::NaiveDate {
-        chrono::NaiveDate::from_ymd(
-            self.year as i32,
-            self.month as u32,
-            self.day as u32
-        )
+        chrono::NaiveDate::from_ymd(self.year as i32, self.month as u32, self.day as u32)
     }
 }
 
@@ -76,10 +68,12 @@ impl DateIterator {
         DateIterator {
             current: from.to_naive_chrono(),
             end: to.to_naive_chrono(),
-        }.into_iter()
-            .filter(|date|  date.weekday() != chrono::Weekday::Sat &&
-                            date.weekday() != chrono::Weekday::Sun)
-            .count()
+        }
+        .into_iter()
+        .filter(|date| {
+            date.weekday() != chrono::Weekday::Sat && date.weekday() != chrono::Weekday::Sun
+        })
+        .count()
     }
 }
 
@@ -100,28 +94,25 @@ impl Iterator for DateIterator {
 
 impl Time {
     pub fn new(hours: usize, minutes: usize) -> Time {
-        Self {
-            hours,
-            minutes,
-        }
+        Self { hours, minutes }
     }
 
     // TODO: Change to just implementing Sub?
     // TODO: can work not just within one day!
     pub fn time_since(&self, earlier: &Self) -> Duration {
-        let hours_diff = self.hours as i32  - earlier.hours as i32;
+        let hours_diff = self.hours as i32 - earlier.hours as i32;
         let minutes_diff = self.minutes as i32 - earlier.minutes as i32;
-        Duration::from_m(hours_diff*60 + minutes_diff)
+        Duration::from_m(hours_diff * 60 + minutes_diff)
     }
 }
 
 //NOTE: Could just derive as it is lexical
 impl PartialOrd for Time {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        let ord =  self.hours.cmp(&other.hours)
-            .then(
-                self.minutes.cmp(&other.minutes)
-            );
+        let ord = self
+            .hours
+            .cmp(&other.hours)
+            .then(self.minutes.cmp(&other.minutes));
         Some(ord)
     }
 }
@@ -141,22 +132,22 @@ impl Display for Period {
 impl Display for Duration {
     fn fmt(&self, f: &mut Formatter) -> Result {
         let (hrs, min) = self.to_hm();
-        let write_time = |buf: &mut Formatter, time, time_type| {
-                if time > 0 {
-                    write!(buf, "{} {}", time, time_type)?;
-                    if time > 1 {
-                        write!(buf, "s")?;
-                    }
+        let write_time = |buf: &mut Formatter, time: i32, time_type| {
+            if time != 0 {
+                write!(buf, "{} {}", time, time_type)?;
+                if time.abs() != 1 {
+                    write!(buf, "s")?;
                 }
-                Ok(())
-            };
-        if hrs > 0 && min > 0 {
+            }
+            Ok(())
+        };
+        if hrs != 0 && min != 0 {
             write_time(f, hrs, "hour")?;
             write!(f, " and ")?;
-            write_time(f, min, "min")?;
+            write_time(f, min, "minute")?;
         } else {
             write_time(f, hrs, "hour")?;
-            write_time(f, min, "min")?;
+            write_time(f, min, "minute")?;
         }
         Ok(())
     }
@@ -180,7 +171,7 @@ impl Sub<Duration> for Duration {
 
     fn sub(self, other: Self) -> Self::Output {
         Duration {
-            minutes: self.minutes - other.minutes
+            minutes: self.minutes - other.minutes,
         }
     }
 }
@@ -191,7 +182,7 @@ impl Add<Duration> for Duration {
 
     fn add(self, other: Self) -> Self::Output {
         Duration {
-            minutes: self.minutes + other.minutes
+            minutes: self.minutes + other.minutes,
         }
     }
 }
@@ -204,23 +195,22 @@ impl Sum for Duration {
 
 impl Period {
     pub fn new(from: Time, to: Time) -> Self {
-        Self {
-            from,
-            to,
-        }
+        Self { from, to }
+    }
+
+    pub fn duration(&self) -> Duration {
+        self.to.time_since(&self.from)
     }
 }
 
 impl Duration {
     pub fn from_m(minutes: i32) -> Self {
-        Self {
-            minutes,
-        }
+        Self { minutes }
     }
 
     pub fn from_hm(hours: i32, minutes: i32) -> Self {
         Self {
-            minutes: hours*60 + minutes,
+            minutes: hours * 60 + minutes,
         }
     }
 
@@ -236,19 +226,20 @@ pub fn now() -> (Date, Time) {
             r"(?P<month>\d{2})-",
             r"(?P<day>\d{2})T",
             r"(?P<hour>\d{2}):",
-            r"(?P<min>\d{2})")).unwrap();
+            r"(?P<min>\d{2})"
+        ))
+        .unwrap();
     }
 
-    let chrono_now = chrono::offset::Local::now()
-        .to_rfc3339();
+    let chrono_now = chrono::offset::Local::now().to_rfc3339();
 
-    let caps = RE.captures(&chrono_now)
-        .expect("Wrong date regex!\n");
+    let caps = RE.captures(&chrono_now).expect("Wrong date regex!\n");
 
     let date = Date::new(
         cap_to_usize(caps.name("year")),
         cap_to_usize(caps.name("month")),
-        cap_to_usize(caps.name("day")));
+        cap_to_usize(caps.name("day")),
+    );
     let time = Time::new(
         cap_to_usize(caps.name("hour")),
         cap_to_usize(caps.name("min")),

@@ -1,12 +1,12 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
-use crate::time::{Duration, Time, Period, Date, now};
+use crate::time::{Date, Duration, Period};
 use std::fmt::{Display, Formatter, Result};
 
 // TODO: Change to trait and have PeriodWorkLog and TimeWorkLog maybe?
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PeriodLog {
-    time: Duration,     // Just derived from period
+    duration: Duration, // Just derived from period, can be removed
     period: Period,
     breaks: Vec<Duration>,
     date: Date,
@@ -14,8 +14,8 @@ pub struct PeriodLog {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct TimeLog {
-    time: Duration,
+pub struct DurationLog {
+    duration: Duration,
     date: Date,
     description: Option<String>,
 }
@@ -23,35 +23,35 @@ pub struct TimeLog {
 #[derive(Serialize, Deserialize, Debug)]
 pub enum WorkLog {
     Period(PeriodLog),
-    Time(TimeLog),
+    Duration(DurationLog),
 }
 
 impl WorkLog {
-    pub fn get_time(&self) -> Duration {
+    pub fn get_duration(&self) -> Duration {
         match self {
-            WorkLog::Period(period_log)  => period_log.time.clone(),
-            WorkLog::Time(time_log)      => time_log.time.clone(),
+            WorkLog::Period(period_log) => period_log.duration.clone(),
+            WorkLog::Duration(duration_log) => duration_log.duration.clone(),
         }
+    }
+
+    pub fn new_period(period: Period, date: Date, desc: String, breaks: Vec<Duration>) -> WorkLog {
+        WorkLog::Period(PeriodLog::new(period, date, desc, breaks))
+    }
+
+    pub fn new_duration(duration: Duration, date: Date, desc: String) -> WorkLog {
+        WorkLog::Duration(DurationLog::new(duration, date, desc))
     }
 }
 
 impl PeriodLog {
-    pub fn new(from_hours: usize, from_minutes: usize, to_hours: usize, to_minutes: usize,
-               parsed_breaks: Vec<(usize, usize)>, description: String) -> Self {
-        let breaks: Vec<Duration> = parsed_breaks.into_iter()
-            .map(|(hrs, min)| Duration::from_hm(hrs as i32, min as i32))
-            .collect();
-        let (date, _time) = now();
-        let from = Time::new(from_hours, from_minutes);
-        let to = Time::new(to_hours, to_minutes);
-        let time = to.time_since(&from) - breaks.clone().into_iter().sum();
+    pub fn new(period: Period, date: Date, description: String, breaks: Vec<Duration>) -> Self {
+        let duration = period.duration() - breaks.clone().into_iter().sum(); // TODO: Don't clone
 
-        Self
-        {
-            time: time,
-            period: Period::new(from, to),
-            breaks: breaks,
-            date: date,
+        Self {
+            duration,
+            period,
+            breaks,
+            date,
             description: Some(description),
         }
     }
@@ -62,14 +62,11 @@ impl PeriodLog {
     }
 }
 
-impl TimeLog {
-    pub fn new(hours: usize, minutes: usize, description: String) -> Self {
-        let (date, _time) = now();
-
-        Self
-        {
-            time: Duration::from_hm(hours as i32, minutes as i32),
-            date: date,
+impl DurationLog {
+    pub fn new(duration: Duration, date: Date, description: String) -> Self {
+        Self {
+            duration,
+            date,
             description: Some(description),
         }
     }
@@ -79,15 +76,21 @@ impl Display for WorkLog {
     fn fmt(&self, f: &mut Formatter) -> Result {
         match self {
             WorkLog::Period(period_log) => period_log.fmt(f),
-            WorkLog::Time(time_log) => time_log.fmt(f),
+            WorkLog::Duration(duration_log) => duration_log.fmt(f),
         }
     }
 }
 
 impl Display for PeriodLog {
     fn fmt(&self, f: &mut Formatter) -> Result {
-        write!(f, "{}: {}, {}, {}", self.date, self.time, self.period,
-            self.description.clone().unwrap_or("Work".to_owned()))?;
+        write!(
+            f,
+            "{}: {}, {}, {}",
+            self.date,
+            self.duration,
+            self.period,
+            self.description.clone().unwrap_or("Work".to_owned())
+        )?;
 
         if self.breaks.len() > 0 {
             write!(f, " | Breaks: {}", self.breaks[0])?;
@@ -99,9 +102,14 @@ impl Display for PeriodLog {
     }
 }
 
-impl Display for TimeLog {
+impl Display for DurationLog {
     fn fmt(&self, f: &mut Formatter) -> Result {
-        write!(f, "{}: {}, {}\n", self.date, self.time,
-            &self.description.clone().unwrap_or("Work".to_owned()))
+        write!(
+            f,
+            "{}: {}, {}\n",
+            self.date,
+            self.duration,
+            &self.description.clone().unwrap_or("Work".to_owned())
+        )
     }
 }
