@@ -2,7 +2,7 @@ use crate::time::{now, Date, Duration, Period, Time};
 use clap::{Parser, Subcommand};
 use core::str::FromStr;
 use lazy_static::lazy_static;
-use regex;
+use regex::Regex;
 use std::fmt::Debug;
 
 pub enum CliResult {
@@ -164,7 +164,7 @@ fn parse_delete(project: String, date: Option<String>) -> CliResult {
 
 fn parse_date(date_str: String) -> Date {
     lazy_static! {
-        static ref RE: regex::Regex = regex::Regex::new(r"(\d{4})?-(1?\d)?([123]\d)").unwrap();
+        static ref RE: Regex = Regex::new(r"(?:(\d{4})-)?(?:([01]?\d)-)?([0123]?\d)").unwrap();
     }
 
     let caps = RE
@@ -197,7 +197,7 @@ fn parse_period(period_str: &str) -> ((usize, usize), (usize, usize)) {
 // TODO: Return Option for better error report
 fn parse_time(time_str: &str) -> (usize, usize) {
     lazy_static! {
-        static ref RE: regex::Regex = regex::Regex::new(r"(\d\d?)(?::(\d\d?))?").unwrap();
+        static ref RE: Regex = Regex::new(r"(\d\d?)(?::(\d\d?))?").unwrap();
     }
 
     let caps = RE.captures(time_str).expect("Invalid time parsing regex!");

@@ -53,9 +53,9 @@ impl Date {
         trunkated
     }
 
-    pub fn weekdays_since(&self, to: &Date) -> usize {
+    pub fn weekdays_since(&self, from: &Date) -> usize {
         // Returns a vector over all dates from self until to.
-        DateIterator::weekdays_since(self, to)
+        DateIterator::weekdays_since(from, self)
     }
 
     fn to_naive_chrono(&self) -> chrono::NaiveDate {
