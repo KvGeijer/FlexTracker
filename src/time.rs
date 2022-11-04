@@ -119,7 +119,7 @@ impl PartialOrd for Time {
 
 impl Display for Time {
     fn fmt(&self, f: &mut Formatter) -> Result {
-        write!(f, "{}:{}", self.hours, self.minutes)
+        write!(f, "{:02}:{:02}", self.hours, self.minutes)
     }
 }
 
