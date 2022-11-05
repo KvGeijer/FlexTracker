@@ -1,5 +1,5 @@
 [package]
-name = "flex_cli"
+name = "flex-cli"
 authors = ["Kåre von Geijer <kare.kvg@gmail.com>"]
 version = "0.1.0"
 edition = "2021"
